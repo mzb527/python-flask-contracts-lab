@@ -1,10 +1,40 @@
-#!/usr/bin/env python3
+from flask import Flask, jsonify
 
-from flask import Flask, request, current_app, g, make_response
-
-contracts = [{"id": 1, "contract_information": "This contract is for John and building a shed"},{"id": 2, "contract_information": "This contract is for a deck for a buisiness"},{"id": 3, "contract_information": "This contract is to confirm ownership of this car"}]
-customers = ["bob","bill","john","sarah"]
 app = Flask(__name__)
 
-if __name__ == '__main__':
-    app.run(port=5555, debug=True)
+# Updated customer data
+customers = {"bob", "bill", "john", "sarah"}
+
+# Updated contract details
+contracts = {
+    "shed": {"party": "John", "purpose": "Building a shed"},
+    "business_dec": {"party": "Company", "purpose": "DEC for a business"}
+}
+
+# Route to retrieve contract details
+@app.route("/contract/<id>")
+def get_contract(id):
+    contract_info = contracts.get(id.lower())
+    if contract_info:
+        return jsonify(contract_info), 200
+    return jsonify({"error": "Contract not found"}), 404
+
+# Route to verify customer existence without sharing details
+@app.route("/customer/<customer_name>")
+def check_customer(customer_name):
+    if customer_name.lower() in customers:
+        return "", 204  # Customer found, but no data shared
+    return jsonify({"error": "Customer not found"}), 404
+
+# Global error handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    return jsonify({"error": "Route not found"}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({"error": "Internal server error"}), 500
+
+# Run the Flask app
+if __name__ == "__main__":
+    app.run(debug=True)
